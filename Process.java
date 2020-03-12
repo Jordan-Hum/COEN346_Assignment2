@@ -8,7 +8,9 @@ class ProcessComparator implements Comparator<Process>
 {
   public int compare(Process p1, Process p2)
   {
-    if(p1.execTime > p2.execTime)
+    if((p1.execTime == p2.execTime) && (p1.arrTime > p2.arrTime))
+      return 1;
+    else if(p1.execTime > p2.execTime)
       return 1;
     else if(p1.execTime < p2.execTime)
       return -1;
@@ -50,8 +52,6 @@ class Process
     this.waitTime = 0;
     this.lastRun = 1;
   }
-
-  //Class Data Member Manipulation--------------------------------------------------------
   
   //Update execution time
   public void setExecTime() 
@@ -234,6 +234,7 @@ class Process
     }
   }
 
+  //Outputs the wait time stored in the waitTimeList array to the corresponding process arrrival time
   public static void printWait(double[] array) 
   {
     System.out.println("-----------------------------");
