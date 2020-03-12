@@ -78,12 +78,12 @@ class Process
 
   public static void main(String args[]) throws Exception 
   {
-    //Read Input.txt file
-    readFile();
-
     //Writes to Output.txt file
     PrintStream fileStream = new PrintStream("Output.txt");
     System.setOut(fileStream);
+
+    //Read Input.txt file
+    readFile();
 
     //Initialize Queue
     initQueue();
@@ -132,11 +132,18 @@ class Process
     {
       try 
       {
+        for(int j = 0 ; j < arrivalTime.length; j++)
+        {
+          if(Integer.parseInt(inputList.get(i)) == arrivalTime[j])
+          {
+            throw new SecurityException();
+          }
+        }
         arrivalTime[processSetCounter++] = Integer.parseInt(inputList.get(i));
       } 
       catch (Exception e) 
       {
-        System.out.println("Invalid input");
+        System.out.println("Invalid input: " + e);
         System.exit(0);
       } 
     }
