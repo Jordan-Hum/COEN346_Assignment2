@@ -18,15 +18,17 @@ class ProcessComparator implements Comparator<Process>
   }
 }
 
-class Process 
+//Process class
+class Process implements Runnable
 {
-  //Private variables
+  //Static variables
   static int arrivalTime[];
   static int executeTime[];
   static double waitTimeList[];
   static int timeCounter = 1;
 
   //Member variables
+  public int processID;
   public int arrTime;
   public int execTime;
   public double quantumTime;
@@ -36,6 +38,7 @@ class Process
   //Default Constructor
   public Process() 
   {
+    this.processID = 0;
     this.arrTime = 0;
     this.execTime = 0;
     this.quantumTime = 0;
@@ -44,8 +47,9 @@ class Process
   }
 
   //Constructor
-  public Process(int arrival, int exec) 
+  public Process(int arrival, int exec, int id) 
   {
+    this.processID = id;
     this.arrTime = arrival;
     this.execTime = exec;
     this.quantumTime = 0.1 * this.execTime;
@@ -54,19 +58,19 @@ class Process
   }
   
   //Update execution time
-  public void setExecTime() 
+  private void setExecTime() 
   {
     this.execTime -= this.quantumTime;
   }
 
   //Update quantum time 
-  public void setQuantumTime() 
+  private void setQuantumTime() 
   {
     this.quantumTime = 0.1 * this.execTime;
   }
 
   //Increments the wait
-  public void updateWait()
+  private void updateWait()
   {
     this.waitTime = this.waitTime + (timeCounter - this.lastRun);
     this.lastRun = timeCounter + 1;
@@ -85,17 +89,34 @@ class Process
     //Read Input.txt file
     readFile();
 
-    //Initialize Queue
-    initQueue();
+    //Execute main thread
+    Thread t = new Thread(new Process());
+    t.start();
 
-    //Schedule
-    RRScheduling();
-
-    //Print wait
-    printWait(waitTimeList);
+    try
+    {
+      t.join();
+    }
+    catch(InterruptedException e)
+    {
+      System.out.println(e);
+    }
     
     //Close output file
     fileStream.close();
+  }
+
+  //Run thread
+  public void run()
+  {
+        //Initialize Queue
+        initQueue();
+
+        //Schedule
+        RRScheduling();
+            
+        //Print wait
+        printWait(waitTimeList);
   }
 
   //Read the input file
@@ -167,24 +188,35 @@ class Process
   //Initialize the first priority queue by declaring processes with arrival and execution times from input.txt
   public static void initQueue()
   {
-    for(int i = 0; i < arrivalTime.length; i++) 
+    int index = 0;
+    for(int i = 0; index < arrivalTime.length; i++) 
     {
-      Process process = new Process(arrivalTime[i], executeTime[i]);
-      System.out.println("Time " + timeCounter + ", Process " + process.arrTime + ", Started");
-      System.out.println("Time " + timeCounter + ", Process " + process.arrTime + ", Resumed");
-      process.updateWait();
-      process.setExecTime();
-      process.setQuantumTime();
-      timeCounter++;
-      System.out.println("Time " + timeCounter + ", Process " + process.arrTime + ", Paused");
-      if(process.execTime != 0) 
+      //Check if time is the process's initial arrival time
+      if (arrivalTime[index] == i + 1)
       {
-        pq1.add(process);
+        Process process = new Process(arrivalTime[index], executeTime[index], index + 1);
+        System.out.println("Time " + timeCounter + ", Process " + process.processID + ", Started");
+        System.out.println("Time " + timeCounter + ", Process " + process.processID + ", Resumed");
+        process.updateWait();
+        process.setExecTime();
+        process.setQuantumTime();
+        timeCounter++;
+        System.out.println("Time " + timeCounter + ", Process " + process.processID + ", Paused");
+        if(process.execTime != 0) 
+        {
+          pq1.add(process);
+        }
+        else
+        {
+          System.out.println("Time " + timeCounter + ", Process " + process.processID + ", Finished");
+          waitTimeList[process.processID - 1] = process.waitTime;
+        }
+        index++;
       }
       else
       {
-        System.out.println("Time " + timeCounter + ", Process " + process.arrTime + ", Finished");
-        waitTimeList[process.arrTime - 1] = process.waitTime;
+        //If time is not the process's initial arrival time, do nothing and increment time
+        timeCounter++;
       }
     }
   }
@@ -193,6 +225,7 @@ class Process
   //2 priority queues used to avoid starvation of long execution time processes
   public static void RRScheduling()
   {
+    //Run until all process's execution time reach 0
     while (!pq1.isEmpty() ^ !pq2.isEmpty()) 
     {
       Process processEdit = new Process();
@@ -201,20 +234,20 @@ class Process
       while(!pq1.isEmpty()) 
       {
         processEdit = pq1.poll();
-        System.out.println("Time " + timeCounter + ", Process " + processEdit.arrTime + ", Resumed");
+        System.out.println("Time " + timeCounter + ", Process " + processEdit.processID + ", Resumed");
         processEdit.updateWait();
         processEdit.setExecTime(); 
         processEdit.setQuantumTime();
         timeCounter++;
-        System.out.println("Time " + timeCounter + ", Process " + processEdit.arrTime + ", Paused");
+        System.out.println("Time " + timeCounter + ", Process " + processEdit.processID + ", Paused");
         if(processEdit.execTime != 0)
         {
           pq2.add(processEdit);
         }
         else
         {
-          System.out.println("Time " + timeCounter + ", Process " + processEdit.arrTime + ", Finished");
-          waitTimeList[processEdit.arrTime - 1] = processEdit.waitTime;
+          System.out.println("Time " + timeCounter + ", Process " + processEdit.processID + ", Finished");
+          waitTimeList[processEdit.processID - 1] = processEdit.waitTime;
         }
       }
 
@@ -222,20 +255,20 @@ class Process
       while(!pq2.isEmpty()) 
       {
         processEdit = pq2.poll();
-        System.out.println("Time " + timeCounter + ", Process " + processEdit.arrTime + ", Resumed");
+        System.out.println("Time " + timeCounter + ", Process " + processEdit.processID + ", Resumed");
         processEdit.updateWait();
         processEdit.setExecTime();
         processEdit.setQuantumTime();
         timeCounter++;
-        System.out.println("Time " + timeCounter + ", Process " + processEdit.arrTime + ", Paused");
+        System.out.println("Time " + timeCounter + ", Process " + processEdit.processID + ", Paused");
         if(processEdit.execTime != 0)
         {
           pq1.add(processEdit);
         }
         else
         {
-          System.out.println("Time " + timeCounter + ", Process " + processEdit.arrTime + ", Finished");
-          waitTimeList[processEdit.arrTime - 1] = processEdit.waitTime;
+          System.out.println("Time " + timeCounter + ", Process " + processEdit.processID + ", Finished");
+          waitTimeList[processEdit.processID - 1] = processEdit.waitTime;
         }
       }
     }
