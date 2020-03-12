@@ -2,6 +2,8 @@
 import java.io.*;
 import java.util.*;
 
+//Define priority list
+//Smallest execution time first
 class ProcessComparator implements Comparator<Process>
 {
   public int compare(Process p1, Process p2)
@@ -15,7 +17,7 @@ class ProcessComparator implements Comparator<Process>
 }
 
 class Process {
-  boolean hasCPU;
+  //Private variables
   static int arrivalTime[];
   static int executeTime[];
   static int timeCounter = 1;
@@ -26,7 +28,7 @@ class Process {
   public double quantumTime;
   public double waitTime;
 
-  //Constructor
+  //Default Constructor
   public Process() {
     this.arrTime = 0;
     this.execTime = 0;
@@ -34,6 +36,7 @@ class Process {
     this.waitTime = 0;
   }
 
+  //Constructor
   public Process(int arrival, int exec) {
     this.arrTime = arrival;
     this.execTime = exec;
@@ -41,10 +44,12 @@ class Process {
     this.waitTime = 0;
   }
 
+  //Update execution time
   public void setExecTime() {
     this.execTime -= this.quantumTime;
   }
 
+  //Update quantum time 
   public void setQuantumTime() {
     this.quantumTime = 0.1 * this.execTime;
   }
@@ -71,6 +76,7 @@ class Process {
     File file = new File("Input.txt");
     List<String> inputList = new ArrayList<String>();
     
+    //Retrieves input from file 
     try 
     {
       Scanner reader = new Scanner(file);
@@ -122,6 +128,7 @@ class Process {
     }
   }
 
+  //Initialize the first priority queue by declaring processes with arrival and execution times from input.txt
   public static void initQueue()
   {
     for(int i = 0; i < arrivalTime.length; i++) {
@@ -141,11 +148,14 @@ class Process {
     }
   }
 
+  //Schedule the remaining processes using the remaining execution time as priority
+  //2 priority queues used to avoid starvation of long execution time processes
   public static void RRScheduling()
   {
     while (!pq1.isEmpty() ^ !pq2.isEmpty()) {
       Process processEdit = new Process();
-      //Check pq1 
+
+      //Schedule all processes from pq1 
       while(!pq1.isEmpty()) {
         processEdit = pq1.poll();
         System.out.println("Time " + timeCounter + ", Process " + processEdit.arrTime + ", Resumed");
@@ -161,7 +171,7 @@ class Process {
         }
       }
 
-      //Check pq2
+      //Schedule all processes from pq2
       while(!pq2.isEmpty()) {
         processEdit = pq2.poll();
         System.out.println("Time " + timeCounter + ", Process " + processEdit.arrTime + ", Resumed");
